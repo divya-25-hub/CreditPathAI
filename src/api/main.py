@@ -3,9 +3,32 @@ import joblib
 import pandas as pd
 from src.utils.risk_logic import risk_category
 from src.utils.recovery_recommendations import recovery_action
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
 
 app = FastAPI()
 
+origins = [
+    "https://legendary-space-sniffle-r7g5pvq6j552p56q-3000.app.github.dev",
+    "http://localhost:3000",
+]
+
+class LoanData(BaseModel):
+    income: float
+    loan_amount: float
+    credit_score: int
+    ltv: float
+    dtir1: float
+    # ... all features used during model training
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Load model
 model = joblib.load("src/models/xgboost_model.pkl")
 
@@ -32,7 +55,8 @@ def predict(data: dict):
     action = recovery_action(category)
 
     return {
-        "probability_of_default": float(prob),
-        "risk_category": category,
-        "recommended_action": action
-    }
+    "risk_category": "Medium Risk",
+    "probability": 0.45,
+    "recommendation": "Send reminder SMS"
+}
+
